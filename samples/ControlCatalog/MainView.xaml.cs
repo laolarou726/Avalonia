@@ -6,6 +6,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
+using Avalonia.Styling;
 using ControlCatalog.Models;
 using ControlCatalog.Pages;
 
@@ -35,7 +36,16 @@ namespace ControlCatalog
             {
                 if (themes.SelectedItem is CatalogTheme theme)
                 {
-                    App.SetThemeVariant(theme);
+                    App.SetCatalogThemes(theme);
+                }
+            };
+            var themeVariants = this.Get<ComboBox>("ThemeVariants");
+            themeVariants.SelectedItem = Application.Current!.ThemeVariant;
+            themeVariants.SelectionChanged += (sender, e) =>
+            {
+                if (themeVariants.SelectedItem is ThemeVariant themeVariant)
+                {
+                    Application.Current!.ThemeVariant = themeVariant;
                 }
             };
 
