@@ -12,12 +12,12 @@ namespace Avalonia.Controls
         /// The UI theme you specify with ThemeVariant can override the app-level ThemeVariant.
         /// </summary>
         /// <remarks>
-        /// To reset local value and inherit parent theme, call <see cref="ThemeVariantScope.ClearValue(AvaloniaProperty)" /> with <see cref="ThemeVariantProperty"/> as an argument.
+        /// To reset local value and inherit parent theme, set ThemeVariant.Default value or Null.
         /// </remarks>
-        public ThemeVariant ThemeVariant
+        public ThemeVariant? RequestedThemeVariant
         {
-            get => GetValue(ThemeVariantProperty);
-            set => SetValue(ThemeVariantProperty, value);
+            get => GetValue(RequestedThemeVariantProperty);
+            set => SetValue(RequestedThemeVariantProperty, value);
         }
     }
 }

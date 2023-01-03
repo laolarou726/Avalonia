@@ -26,6 +26,7 @@ using Avalonia.Rendering.Composition;
 using Java.Lang;
 using Math = System.Math;
 using AndroidRect = Android.Graphics.Rect;
+using Window = Android.Views.Window;
 
 namespace Avalonia.Android.Platform.SkiaPlatform
 {
@@ -284,6 +285,18 @@ namespace Avalonia.Android.Platform.SkiaPlatform
         public Action<WindowTransparencyLevel> TransparencyLevelChanged { get; set; }
 
         public WindowTransparencyLevel TransparencyLevel => WindowTransparencyLevel.None;
+
+        public void SetFrameThemeVariant(PlatformThemeVariant themeVariant)
+        {
+            if (((Activity)_view.Context)?.Window is Window window
+                && OperatingSystem.IsAndroidVersionAtLeast(30))
+            {
+                var appearance = themeVariant == PlatformThemeVariant.Light ?
+                    (int)WindowInsetsControllerAppearance.LightStatusBars :
+                    0;
+                window.InsetsController?.SetSystemBarsAppearance(appearance, appearance);
+            }
+        }
 
         public AcrylicPlatformCompensationLevels AcrylicCompensationLevels => new AcrylicPlatformCompensationLevels(1, 1, 1);
 

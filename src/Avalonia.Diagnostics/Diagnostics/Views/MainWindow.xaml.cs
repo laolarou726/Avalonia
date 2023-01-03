@@ -263,7 +263,7 @@ namespace Avalonia.Diagnostics.Views
             (DataContext as MainViewModel)?.SetOptions(options);
             if (options.ThemeVariant is { } themeVariant)
             {
-                ThemeVariant = themeVariant;
+                RequestedThemeVariant = themeVariant;
             }
         }
 

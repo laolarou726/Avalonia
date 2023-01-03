@@ -40,12 +40,12 @@ namespace ControlCatalog
                 }
             };
             var themeVariants = this.Get<ComboBox>("ThemeVariants");
-            themeVariants.SelectedItem = Application.Current!.ThemeVariant;
+            themeVariants.SelectedItem = Application.Current!.RequestedThemeVariant;
             themeVariants.SelectionChanged += (sender, e) =>
             {
                 if (themeVariants.SelectedItem is ThemeVariant themeVariant)
                 {
-                    Application.Current!.ThemeVariant = themeVariant;
+                    Application.Current!.RequestedThemeVariant = themeVariant;
                 }
             };
 

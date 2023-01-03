@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Text;
+using Avalonia.Platform;
 
 namespace Avalonia.Styling;
 
@@ -13,6 +14,7 @@ public sealed record ThemeVariant(object Key)
         InheritVariant = inheritVariant;
     }
 
+    public static ThemeVariant Default { get; } = new(nameof(Default));
     public static ThemeVariant Light { get; } = new(nameof(Light));
     public static ThemeVariant Dark { get; } = new(nameof(Dark));
 
@@ -31,5 +33,33 @@ public sealed record ThemeVariant(object Key)
     public bool Equals(ThemeVariant? other)
     {
         return Key == other?.Key;
+    }
+
+    public static ThemeVariant FromPlatformThemeVariant(PlatformThemeVariant themeVariant)
+    {
+        return themeVariant switch
+        {
+            PlatformThemeVariant.Light => Light,
+            PlatformThemeVariant.Dark => Dark,
+            _ => throw new ArgumentOutOfRangeException(nameof(themeVariant), themeVariant, null)
+        };
+    }
+
+    public PlatformThemeVariant? ToPlatformThemeVariant()
+    {
+        if (this == Light)
+        {
+            return PlatformThemeVariant.Light;
+        }
+        else if (this == Dark)
+        {
+            return PlatformThemeVariant.Dark;
+        }
+        else if (InheritVariant is { } inheritVariant)
+        {
+            return inheritVariant.ToPlatformThemeVariant();
+        }
+
+        return null;
     }
 }

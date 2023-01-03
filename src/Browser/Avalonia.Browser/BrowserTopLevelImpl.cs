@@ -222,6 +222,11 @@ namespace Avalonia.Browser
 
         public IKeyboardDevice KeyboardDevice { get; } = BrowserWindowingPlatform.Keyboard;
         public WindowTransparencyLevel TransparencyLevel { get; }
+        public void SetFrameThemeVariant(PlatformThemeVariant themeVariant)
+        {
+            // not in the standard, but we potentially can use "apple-mobile-web-app-status-bar-style" for iOS and "theme-color" for android.
+        }
+
         public AcrylicPlatformCompensationLevels AcrylicCompensationLevels { get; }
 
         public ITextInputMethodImpl TextInputMethod => _avaloniaView;

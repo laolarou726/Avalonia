@@ -27,14 +27,9 @@ namespace ControlCatalog.Pages
 
             selector.SelectionChanged += (_, _) =>
             {
-                var theme = (ThemeVariant)selector.SelectedItem!;
-                if ((string)theme.Key == "Default")
+                if (selector.SelectedItem is ThemeVariant theme)
                 {
-                    themeVariantScope.ClearValue(ThemeVariantProperty);
-                }
-                else
-                {
-                    themeVariantScope.ThemeVariant = theme;
+                    themeVariantScope.RequestedThemeVariant = theme;
                 }
             };
         }

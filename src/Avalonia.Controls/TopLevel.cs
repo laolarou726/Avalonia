@@ -4,6 +4,7 @@ using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Platform;
 using Avalonia.Controls.Primitives;
+using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
 using Avalonia.Input.TextInput;
@@ -105,16 +106,6 @@ namespace Avalonia.Controls
         {
             KeyboardNavigation.TabNavigationProperty.OverrideDefaultValue<TopLevel>(KeyboardNavigationMode.Cycle);
             AffectsMeasure<TopLevel>(ClientSizeProperty);
-
-            TransparencyLevelHintProperty.Changed.AddClassHandler<TopLevel>(
-                (tl, e) => 
-                {
-                    if (tl.PlatformImpl != null)
-                    {
-                        tl.PlatformImpl.SetTransparencyLevelHint((WindowTransparencyLevel)e.NewValue!);
-                        tl.HandleTransparencyLevelChanged(tl.PlatformImpl.TransparencyLevel);
-                    }
-                });
         }
 
         /// <summary>
@@ -185,7 +176,7 @@ namespace Avalonia.Controls
             }
             if (_applicationThemeHost is { })
             {
-                ThemeVariant = _applicationThemeHost.ThemeVariant;
+                SetValue(ThemeVariantProperty, _applicationThemeHost.ThemeVariant, BindingPriority.Template);
                 _applicationThemeHost.ThemeVariantChanged += GlobalThemeVariantChanged;
             }
 
@@ -212,6 +203,11 @@ namespace Avalonia.Controls
 
             _pointerOverPreProcessor = new PointerOverPreProcessor(this);
             _pointerOverPreProcessorSubscription = _inputManager?.PreProcess.Subscribe(_pointerOverPreProcessor);
+        }
+
+        internal override ThemeVariant GetEffectiveThemeVariant()
+        {
+            return GetValue(ThemeVariantProperty);
         }
 
         /// <summary>
@@ -270,11 +266,10 @@ namespace Avalonia.Controls
             set => SetValue(TransparencyBackgroundFallbackProperty, value);
         }
 
-        /// <inheritdoc cref="StyledElement.ThemeVariant" />
-        public ThemeVariant ThemeVariant
+        public ThemeVariant? RequestedThemeVariant
         {
-            get => GetValue(ThemeVariantProperty);
-            set => SetValue(ThemeVariantProperty, value);
+            get => GetValue(RequestedThemeVariantProperty);
+            set => SetValue(RequestedThemeVariantProperty, value);
         }
 
         public ILayoutManager LayoutManager
@@ -354,6 +349,24 @@ namespace Avalonia.Controls
         PixelPoint IRenderRoot.PointToScreen(Point p)
         {
             return PlatformImpl?.PointToScreen(p) ?? default;
+        }
+        
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+        {
+            base.OnPropertyChanged(change);
+
+            if (change.Property == TransparencyLevelHintProperty)
+            {
+                if (PlatformImpl != null)
+                {
+                    PlatformImpl.SetTransparencyLevelHint(change.GetNewValue<WindowTransparencyLevel>());
+                    HandleTransparencyLevelChanged(PlatformImpl.TransparencyLevel);
+                }
+            }
+            else if (change.Property == ThemeVariantProperty)
+            {
+                PlatformImpl?.SetFrameThemeVariant(change.GetNewValue<ThemeVariant>().ToPlatformThemeVariant() ?? PlatformThemeVariant.Light);
+            }
         }
         
         /// <summary>
@@ -537,7 +550,7 @@ namespace Avalonia.Controls
 
         private void GlobalThemeVariantChanged(object? sender, EventArgs e)
         {
-            ThemeVariant = _applicationThemeHost!.ThemeVariant;
+            SetValue(ThemeVariantProperty, ((IApplicationThemeVariantHost)sender!).ThemeVariant, BindingPriority.Template);
         }
 
         private void SceneInvalidated(object? sender, SceneInvalidatedEventArgs e)

@@ -206,6 +206,7 @@
                       DisplayMemberBinding="{Binding Key, x:DataType=ThemeVariant}"
                       SelectedIndex="0">
               <ComboBox.Items>
+                <ThemeVariant>Default</ThemeVariant>
                 <ThemeVariant>Light</ThemeVariant>
                 <ThemeVariant>Dark</ThemeVariant>
               </ComboBox.Items>

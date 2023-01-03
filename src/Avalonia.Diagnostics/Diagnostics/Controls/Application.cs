@@ -14,8 +14,8 @@ namespace Avalonia.Diagnostics.Controls
 
         public event EventHandler? Closed;
 
-        public static readonly StyledProperty<ThemeVariant> ThemeProperty =
-            StyledElement.ThemeVariantProperty.AddOwner<Application>();
+        public static readonly StyledProperty<ThemeVariant?> RequestedThemeVariantProperty =
+            StyledElement.RequestedThemeVariantProperty.AddOwner<Application>();
         
         public Application(App application)
         {
@@ -38,8 +38,8 @@ namespace Avalonia.Diagnostics.Controls
                 _ => null
             };
 
-            ThemeVariant = application.ThemeVariant;
-            _application.ThemeVariantChanged += ApplicationOnThemeChanged;
+            RequestedThemeVariant = application.RequestedThemeVariant;
+            _application.PropertyChanged += ApplicationOnPropertyChanged;
         }
 
         internal App Instance => _application;
@@ -123,30 +123,33 @@ namespace Avalonia.Diagnostics.Controls
         internal Rendering.IRenderer? RendererRoot { get; }
         
         /// <inheritdoc cref="Avalonia.Application.ThemeVariant" />
-        public ThemeVariant ThemeVariant
+        public ThemeVariant? RequestedThemeVariant
         {
-            get => GetValue(ThemeProperty);
-            set => SetValue(ThemeProperty, value);
+            get => GetValue(RequestedThemeVariantProperty);
+            set => SetValue(RequestedThemeVariantProperty, value);
         }
 
         public void Dispose()
         {
-            _application.ThemeVariantChanged -= ApplicationOnThemeChanged;
+            _application.PropertyChanged -= ApplicationOnPropertyChanged;
+        }
+
+        private void ApplicationOnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+        {
+            if (e.Property == Avalonia.Application.RequestedThemeVariantProperty)
+            {
+                RequestedThemeVariant = e.GetNewValue<ThemeVariant>();
+            }
         }
 
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
         {
             base.OnPropertyChanged(change);
 
-            if (change.Property == ThemeProperty)
+            if (change.Property == RequestedThemeVariantProperty)
             {
-                _application.ThemeVariant = change.GetNewValue<ThemeVariant>();
+                _application.RequestedThemeVariant = change.GetNewValue<ThemeVariant>();
             }
-        }
-        
-        private void ApplicationOnThemeChanged(object? sender, EventArgs e)
-        {
-            ThemeVariant = _application.ThemeVariant;
         }
     }
 }

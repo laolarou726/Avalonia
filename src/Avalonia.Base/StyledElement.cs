@@ -80,6 +80,11 @@ namespace Avalonia
                 inherits: true,
                 defaultValue: ThemeVariant.Light);
         
+        public static readonly StyledProperty<ThemeVariant?> RequestedThemeVariantProperty =
+            AvaloniaProperty.Register<StyledElement, ThemeVariant?>(
+                nameof(ThemeVariant),
+                defaultValue: ThemeVariant.Default);
+        
         private static readonly ControlTheme s_invalidTheme = new ControlTheme();
         private int _initCount;
         private string? _name;
@@ -630,6 +635,13 @@ namespace Avalonia
 
             if (change.Property == ThemeProperty)
                 OnControlThemeChanged();
+            else if (change.Property == RequestedThemeVariantProperty)
+            {
+                if (change.GetNewValue<ThemeVariant>() is {} themeVariant && themeVariant != ThemeVariant.Default)
+                    SetValue(ThemeVariantProperty, themeVariant);
+                else
+                    ClearValue(ThemeVariantProperty);
+            }
         }
 
         private protected virtual void OnControlThemeChanged()
@@ -688,7 +700,7 @@ namespace Avalonia
             return null;
         }
 
-        internal ThemeVariant GetEffectiveThemeVariant()
+        internal virtual ThemeVariant GetEffectiveThemeVariant()
         {
             return GetValue(ThemeVariantProperty);
         }

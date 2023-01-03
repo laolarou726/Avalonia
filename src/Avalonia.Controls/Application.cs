@@ -7,6 +7,7 @@ using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Templates;
+using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Input.Raw;
@@ -55,6 +56,9 @@ namespace Avalonia
         /// <inheritdoc cref="StyledElement.ThemeVariantProperty" />
         public static readonly StyledProperty<ThemeVariant> ThemeVariantProperty =
             StyledElement.ThemeVariantProperty.AddOwner<Application>();
+        
+        public static readonly StyledProperty<ThemeVariant?> RequestedThemeVariantProperty =
+            StyledElement.RequestedThemeVariantProperty.AddOwner<Application>();
 
         /// <inheritdoc/>
         public event EventHandler<ResourcesChangedEventArgs>? ResourcesChanged;
@@ -71,6 +75,17 @@ namespace Avalonia
         public Application()
         {
             Name = "Avalonia Application";
+
+            var settings = AvaloniaLocator.Current.GetRequiredService<IPlatformSettings>();
+            settings.ColorValuesChanged += OnColorValuesChanged;
+            SetValue(ThemeVariantProperty, ThemeVariant.FromPlatformThemeVariant(settings.GetColorValues().ThemeVariant), BindingPriority.Template);
+        }
+
+        private void OnColorValuesChanged(object? sender, PlatformColorValues e)
+        {
+            SetValue(ThemeVariantProperty, ThemeVariant.FromPlatformThemeVariant(e.ThemeVariant), BindingPriority.Template);
+
+            Resources["SystemAccentColor"] = e.AccentColor1;
         }
 
         /// <summary>
@@ -86,12 +101,16 @@ namespace Avalonia
             set { SetValue(DataContextProperty, value); }
         }
 
-        /// <inheritdoc cref="IStyleable.ThemeVariant" />
+        public ThemeVariant? RequestedThemeVariant
+        {
+            get => GetValue(RequestedThemeVariantProperty);
+            set => SetValue(RequestedThemeVariantProperty, value);
+        }
+        
         public ThemeVariant ThemeVariant
         {
             get => GetValue(ThemeVariantProperty);
-            set => SetValue(ThemeVariantProperty, value);
-        }
+        } 
 
         /// <summary>
         /// Gets the current instance of the <see cref="Application"/> class.
@@ -314,7 +333,14 @@ namespace Avalonia
         {
             base.OnPropertyChanged(change);
 
-            if (change.Property == ThemeVariantProperty)
+            if (change.Property == RequestedThemeVariantProperty)
+            {
+                if (change.GetNewValue<ThemeVariant>() is {} themeVariant && themeVariant != ThemeVariant.Default)
+                    SetValue(ThemeVariantProperty, themeVariant);
+                else
+                    ClearValue(ThemeVariantProperty);
+            }
+            else if (change.Property == ThemeVariantProperty)
             {
                 ThemeVariantChanged?.Invoke(this, EventArgs.Empty);
             }
