@@ -15,50 +15,42 @@ using Avalonia.Controls.Metadata;
 using Avalonia.Data;
 using System;
 using Avalonia.Rendering.Composition;
+using Avalonia.Controls.Utils;
+using System.Collections.Specialized;
 
 namespace Avalonia.Controls
 {
+
+    public enum PivotHeaderPlacement
+    {
+        Top,
+        Bottom
+    }
+
     /// <summary>
     /// A tab control that displays a tab strip along with the content of the selected tab.
     /// </summary>
-    [TemplatePart("PART_ItemsPresenter", typeof(ItemsPresenter))]
-    public class TabControl : SelectingItemsControl, IContentPresenterHost
+    [TemplatePart("PART_Header", typeof(PivotHeader))]
+    [TemplatePart("PART_PivotItemsPresenter", typeof(ItemsPresenter))]
+    public class Pivot : SelectingItemsControl
     {
         /// <summary>
-        /// Defines the <see cref="TabStripPlacement"/> property.
+        /// Defines the <see cref="PivotHeaderPlacement"/> property.
         /// </summary>
-        public static readonly StyledProperty<Dock> TabStripPlacementProperty =
-            AvaloniaProperty.Register<TabControl, Dock>(nameof(TabStripPlacement), defaultValue: Dock.Top);
+        public static readonly StyledProperty<PivotHeaderPlacement> PivotHeaderPlacementProperty =
+            AvaloniaProperty.Register<Pivot, PivotHeaderPlacement>(nameof(PivotHeaderPlacement), defaultValue: PivotHeaderPlacement.Top);
 
         /// <summary>
         /// Defines the <see cref="HorizontalContentAlignment"/> property.
         /// </summary>
         public static readonly StyledProperty<HorizontalAlignment> HorizontalContentAlignmentProperty =
-            ContentControl.HorizontalContentAlignmentProperty.AddOwner<TabControl>();
+            ContentControl.HorizontalContentAlignmentProperty.AddOwner<Pivot>();
 
         /// <summary>
         /// Defines the <see cref="VerticalContentAlignment"/> property.
         /// </summary>
         public static readonly StyledProperty<VerticalAlignment> VerticalContentAlignmentProperty =
-            ContentControl.VerticalContentAlignmentProperty.AddOwner<TabControl>();
-
-        /// <summary>
-        /// Defines the <see cref="ContentTemplate"/> property.
-        /// </summary>
-        public static readonly StyledProperty<IDataTemplate?> ContentTemplateProperty =
-            ContentControl.ContentTemplateProperty.AddOwner<TabControl>();
-
-        /// <summary>
-        /// The selected content property
-        /// </summary>
-        public static readonly StyledProperty<object?> SelectedContentProperty =
-            AvaloniaProperty.Register<TabControl, object?>(nameof(SelectedContent));
-
-        /// <summary>
-        /// The selected content template property
-        /// </summary>
-        public static readonly StyledProperty<IDataTemplate?> SelectedContentTemplateProperty =
-            AvaloniaProperty.Register<TabControl, IDataTemplate?>(nameof(SelectedContentTemplate));
+            ContentControl.VerticalContentAlignmentProperty.AddOwner<Pivot>();
 
         /// <summary>
         /// Defines the <see cref="HeaderDisplayMemberBinding" /> property
@@ -70,18 +62,24 @@ namespace Avalonia.Controls
         /// The default value for the <see cref="ItemsControl.ItemsPanel"/> property.
         /// </summary>
         private static readonly FuncTemplate<Panel> DefaultPanel =
-            new FuncTemplate<Panel>(() => new WrapPanel());
+            new FuncTemplate<Panel>(() => new Grid());
 
         /// <summary>
-        /// Initializes static members of the <see cref="TabControl"/> class.
+        /// Defines the <see cref="HeaderTemplate"/> property.
         /// </summary>
-        static TabControl()
+        public static readonly StyledProperty<IDataTemplate?> HeaderTemplateProperty =
+            AvaloniaProperty.Register<HeaderedContentControl, IDataTemplate?>(nameof(HeaderTemplate));
+
+        /// <summary>
+        /// Initializes static members of the <see cref="Pivot"/> class.
+        /// </summary>
+        static Pivot()
         {
-            SelectionModeProperty.OverrideDefaultValue<TabControl>(SelectionMode.AlwaysSelected);
-            ItemsPanelProperty.OverrideDefaultValue<TabControl>(DefaultPanel);
-            AffectsMeasure<TabControl>(TabStripPlacementProperty);
-            SelectedItemProperty.Changed.AddClassHandler<TabControl>((x, e) => x.UpdateSelectedContent());
-            AutomationProperties.ControlTypeOverrideProperty.OverrideDefaultValue<TabControl>(AutomationControlType.Tab);
+            SelectionModeProperty.OverrideDefaultValue<Pivot>(SelectionMode.AlwaysSelected);
+            ItemsPanelProperty.OverrideDefaultValue<Pivot>(DefaultPanel);
+            AffectsMeasure<Pivot>(PivotHeaderPlacementProperty);
+            SelectedItemProperty.Changed.AddClassHandler<Pivot>((x, e) => x.UpdateSelectedContent());
+            AutomationProperties.ControlTypeOverrideProperty.OverrideDefaultValue<Pivot>(AutomationControlType.Tab);
         }
 
         /// <summary>
@@ -103,49 +101,25 @@ namespace Avalonia.Controls
         }
 
         /// <summary>
-        /// Gets or sets the tabstrip placement of the TabControl.
+        /// Gets or sets the PivotHeader placement of the Pivot.
         /// </summary>
-        public Dock TabStripPlacement
+        public PivotHeaderPlacement PivotHeaderPlacement
         {
-            get { return GetValue(TabStripPlacementProperty); }
-            set { SetValue(TabStripPlacementProperty, value); }
+            get { return GetValue(PivotHeaderPlacementProperty); }
+            set { SetValue(PivotHeaderPlacementProperty, value); }
         }
 
         /// <summary>
-        /// Gets or sets the default data template used to display the content of the selected tab.
+        /// Gets or sets the data template used to display the header content of the control.
         /// </summary>
-        public IDataTemplate? ContentTemplate
+        public IDataTemplate? HeaderTemplate
         {
-            get { return GetValue(ContentTemplateProperty); }
-            set { SetValue(ContentTemplateProperty, value); }
+            get => GetValue(HeaderTemplateProperty);
+            set => SetValue(HeaderTemplateProperty, value);
         }
 
         /// <summary>
-        /// Gets or sets the content of the selected tab.
-        /// </summary>
-        /// <value>
-        /// The content of the selected tab.
-        /// </value>
-        public object? SelectedContent
-        {
-            get { return GetValue(SelectedContentProperty); }
-            internal set { SetValue(SelectedContentProperty, value); }
-        }
-
-        /// <summary>
-        /// Gets or sets the content template for the selected tab.
-        /// </summary>
-        /// <value>
-        /// The content template of the selected tab.
-        /// </value>
-        public IDataTemplate? SelectedContentTemplate
-        {
-            get { return GetValue(SelectedContentTemplateProperty); }
-            internal set { SetValue(SelectedContentTemplateProperty, value); }
-        }
-        
-        /// <summary>
-        /// Gets or sets the <see cref="IBinding"/> to use for binding to the display member of each tab-items header.
+        /// Gets or sets the <see cref="IBinding"/> to use for binding to the display member of each pivot-items header.
         /// </summary>
         [AssignBinding]
         public IBinding? HeaderDisplayMemberBinding
@@ -154,18 +128,8 @@ namespace Avalonia.Controls
             set { SetValue(HeaderDisplayMemberBindingProperty, value); }
         }
 
+        internal PivotHeader? HeaderPart { get; private set; }
         internal ItemsPresenter? ItemsPresenterPart { get; private set; }
-
-        internal IContentPresenter? ContentPart { get; private set; }
-
-        /// <inheritdoc/>
-        IAvaloniaList<ILogical> IContentPresenterHost.LogicalChildren => LogicalChildren;
-
-        /// <inheritdoc/>
-        bool IContentPresenterHost.RegisterContentPresenter(IContentPresenter presenter)
-        {
-            return RegisterContentPresenter(presenter);
-        }
 
         protected override void OnContainersMaterialized(ItemContainerEventArgs e)
         {
@@ -181,49 +145,41 @@ namespace Avalonia.Controls
 
         private void UpdateSelectedContent()
         {
-            if (SelectedIndex == -1)
+            if(HeaderPart != null)
             {
-                SelectedContent = SelectedContentTemplate = null;
+                HeaderPart.SelectedIndex = SelectedIndex;
             }
-            else
-            {
-                var container = SelectedItem as IContentControl ??
-                    ItemContainerGenerator.ContainerFromIndex(SelectedIndex) as IContentControl;
-                SelectedContentTemplate = container?.ContentTemplate;
-                SelectedContent = container?.Content;
-            }
-        }
-
-        /// <summary>
-        /// Called when an <see cref="IContentPresenter"/> is registered with the control.
-        /// </summary>
-        /// <param name="presenter">The presenter.</param>
-        protected virtual bool RegisterContentPresenter(IContentPresenter presenter)
-        {
-            if (presenter.Name == "PART_SelectedContentHost")
-            {
-                ContentPart = presenter;
-                return true;
-            }
-
-            return false;
         }
 
         protected override IItemContainerGenerator CreateItemContainerGenerator()
         {
-            return new TabItemContainerGenerator(this);
+            return new PivotItemContainerGenerator(this);
         }
 
         protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
         {
-            ItemsPresenterPart = e.NameScope.Get<ItemsPresenter>("PART_ItemsPresenter");
+            HeaderPart = e.NameScope.Get<PivotHeader>("PART_Header");
+            ItemsPresenterPart = e.NameScope.Get<ItemsPresenter>("PART_PivotItemsPresenter");
+
+            if (HeaderPart != null)
+            {
+                HeaderPart.AddHandler(SelectionChangedEvent, (o, e) => SelectedIndex = HeaderPart.SelectedIndex);
+            }
+
+            var border =  e.NameScope.Find<Border>("PART_Border");
+
+            if (border != null)
+            {
+                border.AddHandler(Gestures.ScrollGestureEvent, OnScrolled);
+                border.AddHandler(Gestures.ScrollGestureEndedEvent, OnScrolledEnd);
+            }
         }
 
-        private void OnScrolledEnd(object sender, ScrollGestureEndedEventArgs e)
+        private void OnScrolledEnd(object? sender, ScrollGestureEndedEventArgs e)
         {
         }
 
-        private void OnScrolled(object sender, ScrollGestureEventArgs e)
+        private void OnScrolled(object? sender, ScrollGestureEventArgs e)
         {
             if(SelectedIndex != -1)
             {
